@@ -47,3 +47,5 @@ Desktop.ini
 # === Temp files ===
 tmp*.json
 backend
+litv-monitor-*.jar
+litv-monitor-web-*.zip
