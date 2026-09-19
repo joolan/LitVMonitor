@@ -279,7 +279,7 @@ public class ReminderNotifyService {
         try {
             ssrfGuard.assertHostAllowed(new java.net.URL(url).getHost());
         } catch (java.net.MalformedURLException e) {
-            throw new RuntimeException("非法的地址: " + url);
+            throw new IllegalArgumentException("非法的地址: " + url);
         }
     }
 

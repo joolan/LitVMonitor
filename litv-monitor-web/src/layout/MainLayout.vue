@@ -150,6 +150,8 @@ const { allowedMenus, allowedMenuGroups, getGroupMenus } = usePermission()
 const isCollapse = ref(false)
 const versionText = ref('')
 
+const localVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev'
+
 const activeMenu = computed(() => route.path)
 const currentRoute = computed(() => route)
 
@@ -212,7 +214,7 @@ onMounted(async () => {
   try {
     const res = await versionApi.get()
     if (res.data) {
-      versionText.value = res.data.backend + ' / ' + res.data.frontend
+      versionText.value = localVersion + ' / ' + res.data.backend
     }
   } catch {}
 })
@@ -328,6 +330,11 @@ const submitProfile = async () => {
         font-weight: 400;
         opacity: 0.6;
         letter-spacing: 0;
+      }
+      .version-alert {
+        cursor: pointer;
+        margin-left: 4px;
+        vertical-align: middle;
       }
     }
   }

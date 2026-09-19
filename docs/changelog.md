@@ -1,5 +1,24 @@
 # 迭代修复记录
 
+## v1.3.0: 安全修复与体验优化
+
+### 修复
+- **用户创建/编辑 500 错误**：UserService 密码校验、角色校验、管理员保护等异常由 `RuntimeException` 改为 `IllegalArgumentException`，返回 400 + 具体错误信息而非笼统的"服务器内部错误"
+- **登录错误提示**：AuthController 捕获 `BadCredentialsException` 返回"用户名或密码错误"，捕获 `DisabledException` 返回"账号已被禁用"；前端响应拦截器区分登录接口与其他接口的 401 处理
+- **用户管理提交多余字段**：编辑用户后表单携带 `id`、`mustChangePassword`、`createdAt`、`updatedAt` 等后端 DTO 无字段，添加 `@JsonIgnoreProperties(ignoreUnknown = true)` 并前端提交前清理多余字段
+- **登录页深色模式**：登录页输入框受深色主题影响显示异常，强制 `color-scheme: light` + CSS 覆盖保持白底样式
+
+### 优化
+- **备份下载进度**：改用 `ReadableStream` 流式读取，Chrome/Edge 支持 `showSaveFilePicker` 用户选择保存路径 + 零延迟写入，Firefox/Safari 降级为 blob 方案
+- **版本号独立管理**：前端版本从 `package.json` 构建时注入（`__APP_VERSION__`），后端 `/version` 只返回后端版本，显示格式改为 `前端版本 / 后端版本`
+- **异常处理规范化**：全面排查 `RuntimeException` 使用场景，用户输入校验类异常统一返回 400，内部执行错误保留 500
+
+### 文档
+- 更新 Manual.vue（默认密码描述）
+- 更新 README.md、changelog.md、devlog.md
+
+---
+
 ## v1.2.2: 功能增强与交互优化
 
 ### 功能增强

@@ -183,6 +183,25 @@ const cancelForceChange = async () => {
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color-scheme: light;
+
+  :deep(.el-input__wrapper) {
+    background-color: #fff !important;
+    box-shadow: none !important;
+    border: 1px solid #dcdfe6;
+  }
+  :deep(.el-input__wrapper:hover) {
+    border-color: #c0c4cc;
+  }
+  :deep(.el-input__wrapper.is-focus) {
+    border-color: #409eff;
+  }
+  :deep(.el-input__inner) {
+    color: #303133 !important;
+  }
+  :deep(.el-input__inner::placeholder) {
+    color: #a8abb2 !important;
+  }
 }
 
 .login-card {

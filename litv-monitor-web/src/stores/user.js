@@ -39,7 +39,11 @@ export const useUserStore = defineStore('user', () => {
 
   const login = async (username, password) => {
     const response = await axios.post('/api/auth/login', { username, password })
-    const data = response.data.data
+    const res = response.data
+    if (res.code && res.code !== 200) {
+      throw new Error(res.message || '登录失败')
+    }
+    const data = res.data
     setToken(data.token)
     userInfo.value = {
       username: data.username,

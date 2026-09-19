@@ -54,8 +54,14 @@ api.interceptors.response.use(
   },
   (error) => {
     const status = error.response?.status
+    const url = error.config?.url || ''
     if (status === 401) {
-      // 未认证 / 会话失效：全局提示重新登录
+      // 登录接口的401：返回后端实际错误信息（如"用户名或密码错误"）
+      if (url.includes('/auth/login')) {
+        const msg = error.response?.data?.message || '用户名或密码错误'
+        return Promise.reject(new Error(msg))
+      }
+      // 其他接口的401：会话失效，提示重新登录
       promptRelogin()
       return Promise.reject(new Error('登录已过期，请重新登录'))
     }

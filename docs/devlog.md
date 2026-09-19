@@ -4,6 +4,40 @@
 
 ---
 
+## 2026-09-19（安全修复与体验优化）
+
+### v1.3.0
+
+**登录错误提示修复**
+- `AuthController.java`：捕获 `BadCredentialsException` 返回 `Result.error(401, "用户名或密码错误")`，捕获 `DisabledException` 返回 `Result.error(401, "账号已被禁用")`，不再 `throw e` 交由 JwtAuthenticationEntryPoint 返回通用"未认证"
+- `api/index.js`：401 拦截器区分 `/auth/login` 请求与其他请求，登录接口透传后端 message
+
+**用户管理 500 修复**
+- `UserService.java`：`validatePasswordPolicy`、`validateRole`、`updateUser`（管理员保护）、`deleteUser`（管理员保护）、`updateProfile`（旧密码验证）中 `RuntimeException` → `IllegalArgumentException`
+- `UserDTO.java`：添加 `@JsonIgnoreProperties(ignoreUnknown = true)` 防止多余字段导致反序列化异常
+- `UserList.vue`：提交前删除 `id`、`mustChangePassword`、`createdAt`、`updatedAt`
+
+**登录页深色模式**
+- `Login.vue`：`.login-container` 添加 `color-scheme: light` + `:deep()` 覆盖输入框样式，不受深色主题影响
+
+**备份下载进度**
+- `BackupList.vue`：`ReadableStream` 流式读取 + `showSaveFilePicker`（Chrome）/ blob 降级（Firefox），支持选择保存路径 + 实时进度
+
+**版本号独立管理**
+- `vite.config.js`：`define: { __APP_VERSION__ }` 从 `package.json` 注入
+- `VersionController.java`：移除 `frontend-version`，只返回 `backend` 版本
+- `MainLayout.vue`：显示 `前端本地版本 / 后端版本`
+- `application.yml`：移除 `frontend-version` 配置
+
+**异常处理规范化**
+- 全面排查 16 处 `RuntimeException`，8 处用户校验类改为 `IllegalArgumentException`，8 处内部执行错误保留
+
+**文档/版本**
+- 版本号升级至 1.3.0（pom.xml, application.yml, package.json, README.md, start scripts）
+- 更新 Manual.vue、changelog.md、devlog.md
+
+---
+
 ## 2026-09-18（功能增强与交互优化）
 
 ### v1.2.2: 功能增强与交互优化

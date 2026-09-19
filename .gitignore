@@ -43,3 +43,7 @@ Desktop.ini
 
 # === Deployment archive ===
 .deploy/dist.tar.gz
+
+# === Temp files ===
+tmp*.json
+backend

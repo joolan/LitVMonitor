@@ -64,10 +64,10 @@ public class UserService {
         // Protect admin user: cannot change role or disable
         if (isBuiltInAdmin(user.getUsername())) {
             if (dto.getRole() != null && !dto.getRole().equals(user.getRole())) {
-                throw new RuntimeException("不能修改管理员账号的角色");
+                throw new IllegalArgumentException("不能修改管理员账号的角色");
             }
             if (dto.getEnabled() != null && !dto.getEnabled().equals(user.getEnabled())) {
-                throw new RuntimeException("不能禁用管理员账号");
+                throw new IllegalArgumentException("不能禁用管理员账号");
             }
         }
 
@@ -93,7 +93,7 @@ public class UserService {
     public boolean deleteUser(Long id) {
         SysUser user = sysUserMapper.selectById(id);
         if (user != null && isBuiltInAdmin(user.getUsername())) {
-            throw new RuntimeException("不能删除管理员账号");
+            throw new IllegalArgumentException("不能删除管理员账号");
         }
         return sysUserMapper.deleteById(id) > 0;
     }
@@ -121,13 +121,13 @@ public class UserService {
         // If changing password, verify old password and confirmation
         if (newPassword != null && !newPassword.isEmpty()) {
             if (oldPassword == null || oldPassword.isEmpty()) {
-                throw new RuntimeException("请输入旧密码");
+                throw new IllegalArgumentException("请输入旧密码");
             }
             if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-                throw new RuntimeException("旧密码不正确");
+                throw new IllegalArgumentException("旧密码不正确");
             }
             if (newPasswordConfirm != null && !newPassword.equals(newPasswordConfirm)) {
-                throw new RuntimeException("两次输入的密码不一致");
+                throw new IllegalArgumentException("两次输入的密码不一致");
             }
             validatePasswordPolicy(newPassword);
             user.setPassword(passwordEncoder.encode(newPassword));
@@ -179,19 +179,19 @@ public class UserService {
 
     private void validatePasswordPolicy(String password) {
         if (password == null || password.length() < 8) {
-            throw new RuntimeException("密码长度不能少于8位");
+            throw new IllegalArgumentException("密码长度不能少于8位");
         }
         if (!password.matches(".*[A-Z].*") || !password.matches(".*[a-z].*") || !password.matches(".*\\d.*")) {
-            throw new RuntimeException("密码必须包含大写字母、小写字母和数字");
+            throw new IllegalArgumentException("密码必须包含大写字母、小写字母和数字");
         }
     }
 
     private void validateRole(String role) {
         if (role == null || role.isEmpty()) {
-            throw new RuntimeException("角色不能为空");
+            throw new IllegalArgumentException("角色不能为空");
         }
         if (!"ADMIN".equals(role) && !"OPERATOR".equals(role) && !"VIEWER".equals(role)) {
-            throw new RuntimeException("非法的角色: " + role);
+            throw new IllegalArgumentException("非法的角色: " + role);
         }
     }
 

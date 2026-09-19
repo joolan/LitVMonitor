@@ -13,14 +13,8 @@ public class VersionController {
     @Value("${app.version:1.0.0}")
     private String backendVersion;
 
-    @Value("${app.frontend-version:1.0.0}")
-    private String frontendVersion;
-
     @GetMapping("/version")
     public Result<Map<String, String>> getVersion() {
-        return Result.success(Map.of(
-                "backend", backendVersion,
-                "frontend", frontendVersion
-        ));
+        return Result.success(Map.of("backend", backendVersion));
     }
 }

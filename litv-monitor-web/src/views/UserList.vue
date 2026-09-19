@@ -241,11 +241,16 @@ const submitForm = async () => {
 
   submitting.value = true
   try {
+    const payload = { ...form }
+    delete payload.id
+    delete payload.mustChangePassword
+    delete payload.createdAt
+    delete payload.updatedAt
     if (editingId.value) {
-      await userApi.update(editingId.value, form)
+      await userApi.update(editingId.value, payload)
       ElMessage.success('更新成功')
     } else {
-      await userApi.create(form)
+      await userApi.create(payload)
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false

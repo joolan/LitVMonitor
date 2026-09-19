@@ -84,6 +84,20 @@ public class AuthController {
                     .build();
 
             return Result.success(response);
+        } catch (org.springframework.security.authentication.BadCredentialsException e) {
+            userSessionService.recordFailedAttempt(request.getUsername());
+            userSessionService.recordFailedAttemptByIp(clientIp);
+            try {
+                String maskedBody = AuditLogService.maskSensitiveFields(
+                    "{\"username\":\"" + request.getUsername() + "\",\"password\":\"" + request.getPassword() + "\"}",
+                    "password");
+                auditLogService.record(null, request.getUsername(), "LOGIN", "USER",
+                        null, request.getUsername(), "登录失败: 用户名或密码错误", maskedBody);
+            } catch (Exception ignored) {}
+            return Result.error(401, "用户名或密码错误");
+        } catch (org.springframework.security.authentication.DisabledException e) {
+            userSessionService.recordFailedAttempt(request.getUsername());
+            return Result.error(401, "账号已被禁用");
         } catch (Exception e) {
             // Record failed attempt
             userSessionService.recordFailedAttempt(request.getUsername());
@@ -96,7 +110,7 @@ public class AuthController {
                 auditLogService.record(null, request.getUsername(), "LOGIN", "USER",
                         null, request.getUsername(), "登录失败: " + e.getMessage(), maskedBody);
             } catch (Exception ignored) {}
-            throw e;
+            return Result.error(401, "登录失败: " + e.getMessage());
         }
     }
 
