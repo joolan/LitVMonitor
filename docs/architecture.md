@@ -36,7 +36,7 @@ LitVMonitor/
 │   │   ├── components/            # 可复用组件
 │   │   │   ├── JsonSchemaEditor.vue   # JSON Schema 可视化编辑器（双模式 + 拖拽排序）
 │   │   │   └── SchemaFieldRow.vue     # Schema 字段行（递归、折叠、必填标记）
-│   │   └── views/                 # 20 个页面视图
+│   │   └── views/                 # 22 个页面视图
 │   └── vite.config.js             # Vite 配置 + API 代理
 │
 ├── README.md

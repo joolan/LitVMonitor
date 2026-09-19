@@ -1,6 +1,7 @@
 # LitVMonitor
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.3.0-green.svg)]()
 
 > 当前版本：**v1.3.0**
 
