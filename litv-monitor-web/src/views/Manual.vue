@@ -47,7 +47,7 @@
             <p><b>后端</b>：Java 17 + Spring Boot 3.2.5 + MyBatis-Plus + SQLite（轻量级，无需额外安装数据库）</p>
             <p><b>前端</b>：Vue 3 + Element Plus + ECharts + Vite</p>
             <h4>工作原理</h4>
-            <p>系统通过<b>策略模式的多协议执行器</b>向目标发送请求/探测：HTTP 使用 OkHttp，其余协议（Ping/TCP/SSH/Telnet/FTP/VNC/MySQL/PostgreSQL/Redis/Memcached/MongoDB/ZooKeeper/AMQP/MQTT）在连接前校验地址并按协议握手。根据配置的验证规则（状态码、JSONPath、文本匹配）判断监控结果。支持变量提取和传递，实现登录链等复杂场景。</p>
+            <p>系统通过<b>策略模式的多协议执行器</b>向目标发送请求/探测：HTTP 使用 OkHttp，其余协议（Ping/TCP/SSH/Telnet/FTP/VNC/MySQL/PostgreSQL/Redis/Memcached/MongoDB/ZooKeeper/AMQP/MQTT）在连接前校验地址并按协议握手。根据配置的验证规则（状态码、JSONPath、文本匹配）判断监控结果。支持变量提取和传递，实现监控间数据联动等复杂场景。</p>
             <p><b>定时任务</b>：内置调度器每分钟检查需要执行的监控任务，按执行计划触发。异步执行不阻塞HTTP请求。</p>
             <p><b>告警流程</b>：监控触发告警条件 → 按触发类型查找告警模板 → 渲染消息 → 通过配置的渠道发送 → 记录告警日志。</p>
             <p><b>安全机制</b>：JWT 认证 + 角色实时校验（降权即时生效）、BCrypt 密码、连接期 SSRF 校验（可在安全设置切换模式）、GraalVM 脚本沙箱、审计日志脱敏、登录失败锁定、IP 黑白名单。</p>
@@ -91,7 +91,7 @@
 
             <h4>使用场景</h4>
             <ul>
-              <li><b>登录链</b>：第一个监控提取token → 存入 <code v-text="'{{group.token}}'"></code> → 后续监控在请求头中引用</li>
+              <li><b>监控间数据联动</b>：第一个监控提取token → 存入 <code v-text="'{{group.token}}'"></code> → 后续监控在请求头中引用</li>
               <li><b>环境切换</b>：全局变量 <code v-text="'{{global.baseUrl}}'"></code> 存储API地址，所有监控引用同一变量</li>
             </ul>
           </div>
@@ -313,7 +313,7 @@ if (request.method === 'POST') {
           </template>
           <div class="section-content">
             <h4>用途</h4>
-            <p>将多个监控项组合成有序执行链。适用于登录链、接口依赖链等场景。</p>
+            <p>将多个监控项组合成有序执行链。适用于接口依赖链、数据联动等场景。</p>
 
             <h4>执行计划</h4>
             <ul>
