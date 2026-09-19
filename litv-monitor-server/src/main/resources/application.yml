@@ -1,0 +1,79 @@
+server:
+  port: 8088
+  servlet:
+    context-path: /api
+
+app:
+  version: 1.2.2
+  frontend-version: 1.2.2
+
+spring:
+  application:
+    name: litv-monitor
+  datasource:
+    # 通过 JDBC URL 下发 PRAGMA，确保连接池中每个连接都生效（避免 connection-init-sql 多语句只执行第一条）
+    url: jdbc:sqlite:./litv-monitor.db?busy_timeout=5000&journal_mode=WAL&synchronous=NORMAL&foreign_keys=on
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:}
+  secret-file: ${JWT_SECRET_FILE:./.jwt-secret}   # JWT_SECRET 未设置时，自动生成并持久化随机密钥的位置
+  expiration: 86400000  # 24 hours
+
+# Monitor Configuration
+monitor:
+  default-timeout: 30
+  max-concurrent: 10
+  retry-interval: 60
+  ssl-check-days-warning: 30
+  ssl-check-interval-minutes: 360   # 同一域名 SSL 证书两次检查的最小间隔（分钟）
+  domain-asset-update-interval-minutes: 10  # 同一域名资产/IP 记录最小更新间隔（分钟）
+  log-body-max-size: 262144         # 单条执行日志请求/响应体入库最大字节数（0=不限制）
+  log-retention-days: 30            # 执行日志/告警日志自动保留天数（0=不自动清理）
+  ssl-verify-disabled: ${SSL_VERIFY_DISABLED:true}   # 是否禁用监控请求的 SSL 证书验证。默认 true 以兼容自签名/证书链不完整场景；若 JVM 信任库配置正确，建议设为 false 获得 MITM 防护
+  ssrf-protection: ${SSRF_PROTECTION:true}            # 是否启用 SSRF 防护，禁止监控请求访问内网/回环/云元数据地址
+
+# CORS Configuration
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+
+# Login Rate Limiting
+login:
+  max-attempts: 5                   # 登录失败最大尝试次数
+  lockout-minutes: 15               # 锁定时长（分钟）
+
+# Logging
+logging:
+  level:
+    com.litv.monitor: INFO
+    org.springframework.security: WARN
