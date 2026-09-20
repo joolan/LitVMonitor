@@ -1,9 +1,9 @@
 # LitVMonitor
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.3.0-green.svg)]()
+[![Version](https://img.shields.io/badge/version-1.3.1-green.svg)]()
 
-> 当前版本：**v1.3.0**
+> 当前版本：**v1.3.1**
 
 轻量级**多协议监控系统**（HTTP / Ping / TCP / SSH / Telnet / FTP / VNC / MySQL / PostgreSQL / Redis / Memcached / MongoDB / ZooKeeper / AMQP / MQTT），无需安装代理。支持变量提取与传递（监控间数据联动）、SSL证书检测、域名证书管理、API签名、预请求脚本、代理设置（含连通性测试）、多渠道告警（邮件/Webhook/钉钉/企业微信/飞书）、Uptime统计、可配置公开状态页、API Schema可视化编辑与变更检测、巡检模式、周期提醒（含事务提醒）、多主题换肤、仪表盘自动刷新与备忘录与漏洞情报导航、版本展示。
 
@@ -77,7 +77,7 @@ mvn spring-boot:run
 |------|------|------|
 | Windows | `start.bat` | `stop.bat` |
 | Linux | `./start.sh` | `./stop.sh` |
-| 通用 | `java -jar litv-monitor-1.3.0.jar` | `Ctrl+C` 或 `kill` |
+| 通用 | `java -jar litv-monitor-1.3.1.jar` | `Ctrl+C` 或 `kill` |
 
 > ⚠️ **必须在 `litv-monitor-server` 目录下启动**：数据库路径 `jdbc:sqlite:./litv-monitor.db` 是相对路径，在其它目录启动会生成一个空库。
 

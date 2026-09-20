@@ -4,6 +4,31 @@
 
 ---
 
+## 2026-09-20（Bug 修复与数据清理）
+
+### v1.3.1
+
+**周期提醒重复通知修复**
+- `ReminderScheduler.java`：过期任务（now >= nextDue）时跳过提前提醒，只发到期提醒，避免同一到期点发 2 条通知
+
+**恢复通知不发送修复**
+- `ExecutionService.java`：连续失败触发告警后不再重置计数器为 0，保留计数以便恢复检测
+- `AlertRateLimitService.java`：恢复通知查询（`findTemplateWithRateLimit`）移除 `rateLimitEnabled=true` 硬性要求；限频检查保留独立的 `findTemplateWithRateLimitFlag` 方法
+
+**告警模板表单优化**
+- `AlertTemplateList.vue`：恢复通知开关始终展示（移除 `v-if="rateLimitEnabled"`），连续正常次数仅依赖恢复通知开关
+
+**数据清理功能**
+- `BackupController.java`：新增 `POST /backup/cleanup`，接收 executionDays/alertDays/inspectionDays，按天数分别清理，仅 ADMIN 权限
+- `BackupList.vue`：新增「数据清理」按钮 + 弹窗，独立配置每项清理天数（默认 30 天），二次确认后执行
+
+**文档/版本**
+- 版本号升级至 1.3.1
+- 更新 Manual.vue（告警限频、数据备份章节）
+- 更新 changelog.md、README.md
+
+---
+
 ## 2026-09-19（安全修复与体验优化）
 
 ### v1.3.0

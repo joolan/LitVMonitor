@@ -102,11 +102,11 @@
           <el-input-number v-model="form.rateLimitCount" :min="1" :max="9999" style="width: 200px" />
           <span style="margin-left: 8px; color: #909399; font-size: 12px">相同监控项/任务/域名的告警累计</span>
         </el-form-item>
-        <el-form-item v-if="form.rateLimitEnabled" label="恢复通知">
+        <el-form-item label="恢复通知">
           <el-switch v-model="form.recoveryNotify" />
           <span style="margin-left: 8px; color: #909399; font-size: 12px">告警恢复后发送已恢复通知</span>
         </el-form-item>
-        <el-form-item v-if="form.rateLimitEnabled && form.recoveryNotify" label="连续正常次数">
+        <el-form-item v-if="form.recoveryNotify" label="连续正常次数">
           <el-input-number v-model="form.recoveryConsecutiveCount" :min="1" :max="100" style="width: 200px" />
           <span style="margin-left: 8px; color: #909399; font-size: 12px">连续成功N次后才发送恢复通知，避免偶然恢复</span>
         </el-form-item>

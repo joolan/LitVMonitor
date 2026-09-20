@@ -20,7 +20,7 @@
 
     <groupId>com.litv</groupId>
     <artifactId>litv-monitor</artifactId>
-    <version>1.3.0</version>
+    <version>1.3.1</version>
     <name>LitVMonitor</name>
     <description>Lightweight HTTP/API Monitoring System</description>
 

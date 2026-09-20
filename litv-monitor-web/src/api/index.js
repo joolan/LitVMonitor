@@ -223,7 +223,8 @@ export const backupApi = {
   create: () => api.post('/backup/create'),
   list: () => api.get('/backup/list'),
   restore: (data) => api.post('/backup/restore', data),
-  delete: (path) => api.delete('/backup/delete', { params: { path } })
+  delete: (path) => api.delete('/backup/delete', { params: { path } }),
+  cleanup: (data) => api.post('/backup/cleanup', data)
 }
 
 // Proxy API

@@ -64,7 +64,10 @@ public class ReminderScheduler {
         }
 
         // 提前提醒（同一到期点只发一次）
-        if (Boolean.TRUE.equals(task.getAdvanceEnabled()) && shouldAdvanceRemind(task, now, nextDue)) {
+        // 如果已过期，跳过提前提醒（到期提醒会处理）
+        if (!now.isBefore(nextDue)) {
+            // 已过期 → 走到期提醒逻辑，跳过提前提醒
+        } else if (Boolean.TRUE.equals(task.getAdvanceEnabled()) && shouldAdvanceRemind(task, now, nextDue)) {
             String cacheKey = task.getId() + ":advance:" + nextDueStr;
             if (remindCache.getIfPresent(cacheKey) == null) {
                 log.info("Sending advance reminder for task: {}", task.getTitle());

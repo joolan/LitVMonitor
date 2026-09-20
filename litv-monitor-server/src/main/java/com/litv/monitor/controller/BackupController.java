@@ -297,6 +297,100 @@ public class BackupController {
         }
     }
 
+    @PostMapping("/cleanup")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<Map<String, Integer>> cleanupData(@RequestBody Map<String, Object> body) {
+        int executionDays = getIntParam(body, "executionDays", 30);
+        int alertDays = getIntParam(body, "alertDays", 30);
+        int inspectionDays = getIntParam(body, "inspectionDays", 30);
+
+        if (executionDays < 0 || alertDays < 0 || inspectionDays < 0) {
+            return Result.error("天数不能为负数");
+        }
+
+        Map<String, Integer> deleted = new LinkedHashMap<>();
+        String username = getCurrentUsername();
+
+        // 1. 清理执行日志
+        if (executionDays > 0) {
+            int count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM execution_log WHERE executed_at < datetime('now', '-' || ? || ' days')",
+                Integer.class, executionDays);
+            if (count > 0) {
+                jdbcTemplate.update(
+                    "DELETE FROM execution_log WHERE executed_at < datetime('now', '-' || ? || ' days')",
+                    executionDays);
+            }
+            deleted.put("executionLog", count);
+            auditLogService.record(null, username, "CLEANUP", "DATA",
+                    null, null, "清理执行日志（" + executionDays + "天前），删除 " + count + " 条", null);
+        } else {
+            deleted.put("executionLog", 0);
+        }
+
+        // 2. 清理告警记录
+        if (alertDays > 0) {
+            int count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM alert_log WHERE sent_at < datetime('now', '-' || ? || ' days')",
+                Integer.class, alertDays);
+            if (count > 0) {
+                jdbcTemplate.update(
+                    "DELETE FROM alert_log WHERE sent_at < datetime('now', '-' || ? || ' days')",
+                    alertDays);
+            }
+            deleted.put("alertLog", count);
+            auditLogService.record(null, username, "CLEANUP", "DATA",
+                    null, null, "清理告警记录（" + alertDays + "天前），删除 " + count + " 条", null);
+        } else {
+            deleted.put("alertLog", 0);
+        }
+
+        // 3. 清理巡检记录（先删 detail，再删 history，最后删无 history 的 config）
+        if (inspectionDays > 0) {
+            int detailCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM inspection_detail WHERE created_at < datetime('now', '-' || ? || ' days')",
+                Integer.class, inspectionDays);
+            int historyCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM inspection_history WHERE completed_at < datetime('now', '-' || ? || ' days')",
+                Integer.class, inspectionDays);
+
+            if (detailCount > 0) {
+                jdbcTemplate.update(
+                    "DELETE FROM inspection_detail WHERE history_id IN " +
+                    "(SELECT id FROM inspection_history WHERE completed_at < datetime('now', '-' || ? || ' days'))",
+                    inspectionDays);
+            }
+            if (historyCount > 0) {
+                jdbcTemplate.update(
+                    "DELETE FROM inspection_history WHERE completed_at < datetime('now', '-' || ? || ' days')",
+                    inspectionDays);
+            }
+            // 清理无历史记录的巡检配置
+            jdbcTemplate.update(
+                "DELETE FROM inspection_config WHERE id NOT IN (SELECT DISTINCT config_id FROM inspection_history)");
+
+            deleted.put("inspectionDetail", detailCount);
+            deleted.put("inspectionHistory", historyCount);
+            auditLogService.record(null, username, "CLEANUP", "DATA",
+                    null, null, "清理巡检记录（" + inspectionDays + "天前），删除 " + historyCount + " 条历史 + " + detailCount + " 条详情", null);
+        } else {
+            deleted.put("inspectionDetail", 0);
+            deleted.put("inspectionHistory", 0);
+        }
+
+        log.info("Data cleanup completed: {}", deleted);
+        return Result.success(deleted);
+    }
+
+    private int getIntParam(Map<String, Object> body, String key, int defaultVal) {
+        Object val = body.get(key);
+        if (val instanceof Number) return ((Number) val).intValue();
+        if (val instanceof String) {
+            try { return Integer.parseInt((String) val); } catch (NumberFormatException e) { /* ignore */ }
+        }
+        return defaultVal;
+    }
+
     private Path validateBackupPath(String path) throws IOException {
         Path backupDir = Paths.get(extractDbPath()).getParent().resolve("backups").toAbsolutePath().normalize();
         Path target = Paths.get(path).toAbsolutePath().normalize();

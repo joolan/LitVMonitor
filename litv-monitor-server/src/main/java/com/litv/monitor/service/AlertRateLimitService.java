@@ -37,7 +37,7 @@ public class AlertRateLimitService {
      * Returns true if should SUPPRESS notification.
      */
     public boolean isRateLimited(String fingerprint, String triggerType) {
-        AlertTemplate template = findTemplateWithRateLimit(triggerType);
+        AlertTemplate template = findTemplateWithRateLimitFlag(triggerType);
         if (template == null) return false;
 
         int limit = template.getRateLimitCount() != null ? template.getRateLimitCount() : 0;
@@ -172,11 +172,39 @@ public class AlertRateLimitService {
     }
 
     /**
-     * Find an enabled template with rate limit enabled for the given triggerType.
+     * Find an enabled template for the given triggerType.
+     * Used for recovery notification config (recoveryNotify, recoveryConsecutiveCount).
      * Falls back to ALL type if no exact match.
      */
     private AlertTemplate findTemplateWithRateLimit(String triggerType) {
         // Try exact triggerType match first
+        AlertTemplate template = alertTemplateMapper.selectOne(
+            new LambdaQueryWrapper<AlertTemplate>()
+                .eq(AlertTemplate::getTriggerType, triggerType)
+                .eq(AlertTemplate::getEnabled, true)
+                .orderByAsc(AlertTemplate::getId)
+                .last("LIMIT 1")
+        );
+        if (template != null) return template;
+
+        // Fallback to ALL type
+        if (!"ALL".equals(triggerType)) {
+            template = alertTemplateMapper.selectOne(
+                new LambdaQueryWrapper<AlertTemplate>()
+                    .eq(AlertTemplate::getTriggerType, "ALL")
+                    .eq(AlertTemplate::getEnabled, true)
+                    .orderByAsc(AlertTemplate::getId)
+                    .last("LIMIT 1")
+            );
+        }
+        return template;
+    }
+
+    /**
+     * Find an enabled template WITH rate limit enabled for the given triggerType.
+     * Used for rate limit checks.
+     */
+    private AlertTemplate findTemplateWithRateLimitFlag(String triggerType) {
         AlertTemplate template = alertTemplateMapper.selectOne(
             new LambdaQueryWrapper<AlertTemplate>()
                 .eq(AlertTemplate::getTriggerType, triggerType)
@@ -187,7 +215,6 @@ public class AlertRateLimitService {
         );
         if (template != null) return template;
 
-        // Fallback to ALL type
         if (!"ALL".equals(triggerType)) {
             template = alertTemplateMapper.selectOne(
                 new LambdaQueryWrapper<AlertTemplate>()

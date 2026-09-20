@@ -3,6 +3,10 @@
     <div class="page-header">
       <h2>数据备份</h2>
       <div class="header-actions">
+        <el-button type="danger" @click="showCleanupDialog" v-permission="'backup:create'">
+          <el-icon><Delete /></el-icon>
+          数据清理
+        </el-button>
         <el-button type="primary" @click="createBackup" :loading="creating" v-permission="'backup:create'">
           <el-icon><Download /></el-icon>
           创建备份
@@ -60,6 +64,39 @@
 
       <el-empty v-if="!loading && backups.length === 0" description="暂无备份" />
     </el-card>
+
+    <!-- 数据清理弹窗 -->
+    <el-dialog v-model="cleanupVisible" title="数据清理" width="480px" :close-on-click-modal="false">
+      <el-alert type="warning" :closable="false" style="margin-bottom: 20px;">
+        <template #title>
+          <span>清理操作不可恢复，建议清理前先创建备份。</span>
+        </template>
+      </el-alert>
+      <el-form label-width="120px">
+        <el-form-item label="执行日志">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <el-input-number v-model="cleanupForm.executionDays" :min="0" :max="3650" controls-position="right" style="width:120px;" />
+            <span style="color:#909399;font-size:13px;">天前的数据</span>
+          </div>
+        </el-form-item>
+        <el-form-item label="告警记录">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <el-input-number v-model="cleanupForm.alertDays" :min="0" :max="3650" controls-position="right" style="width:120px;" />
+            <span style="color:#909399;font-size:13px;">天前的数据</span>
+          </div>
+        </el-form-item>
+        <el-form-item label="巡检记录">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <el-input-number v-model="cleanupForm.inspectionDays" :min="0" :max="3650" controls-position="right" style="width:120px;" />
+            <span style="color:#909399;font-size:13px;">天前的数据</span>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="cleanupVisible = false">取消</el-button>
+        <el-button type="danger" @click="executeCleanup" :loading="cleanupLoading">确认清理</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -292,6 +329,57 @@ const formatSize = (bytes) => {
     i++
   }
   return size.toFixed(1) + ' ' + units[i]
+}
+
+const cleanupVisible = ref(false)
+const cleanupLoading = ref(false)
+const cleanupForm = ref({
+  executionDays: 30,
+  alertDays: 30,
+  inspectionDays: 30
+})
+
+const showCleanupDialog = () => {
+  cleanupForm.value = { executionDays: 30, alertDays: 30, inspectionDays: 30 }
+  cleanupVisible.value = true
+}
+
+const executeCleanup = async () => {
+  const { executionDays, alertDays, inspectionDays } = cleanupForm.value
+  if (executionDays === 0 && alertDays === 0 && inspectionDays === 0) {
+    ElMessage.warning('至少设置一项大于 0 的天数')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      `确认清理以下数据？\n• 执行日志：${executionDays > 0 ? executionDays + ' 天前' : '不清理'}\n• 告警记录：${alertDays > 0 ? alertDays + ' 天前' : '不清理'}\n• 巡检记录：${inspectionDays > 0 ? inspectionDays + ' 天前' : '不清理'}`,
+      '数据清理确认',
+      { confirmButtonText: '确认清理', cancelButtonText: '取消', type: 'warning' }
+    )
+  } catch {
+    return
+  }
+  cleanupLoading.value = true
+  try {
+    const res = await backupApi.cleanup(cleanupForm.value)
+    if (res.code === 200) {
+      const d = res.data
+      const parts = []
+      if (d.executionLog > 0) parts.push(`执行日志 ${d.executionLog} 条`)
+      if (d.alertLog > 0) parts.push(`告警记录 ${d.alertLog} 条`)
+      const ih = (d.inspectionHistory || 0)
+      const id = (d.inspectionDetail || 0)
+      if (ih > 0 || id > 0) parts.push(`巡检 ${ih} 条历史 + ${id} 条详情`)
+      ElMessage.success(parts.length > 0 ? '已清理: ' + parts.join(', ') : '无需清理')
+      cleanupVisible.value = false
+    } else {
+      ElMessage.error(res.message || '清理失败')
+    }
+  } catch (error) {
+    ElMessage.error(error.message || '清理失败')
+  } finally {
+    cleanupLoading.value = false
+  }
 }
 </script>
 

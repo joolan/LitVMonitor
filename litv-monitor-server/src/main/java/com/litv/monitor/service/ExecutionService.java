@@ -167,7 +167,6 @@ public class ExecutionService {
             if (consecutive >= threshold) {
                 log.info("Monitor {} failed {} times consecutively (threshold: {}), sending alert",
                         monitor.getName(), consecutive, threshold);
-                monitorConsecutiveFailCounts.put(monitor.getId(), 0);
                 alertService.sendAlertByIds(configIds, logEntry, "FAIL");
             }
         } else {
