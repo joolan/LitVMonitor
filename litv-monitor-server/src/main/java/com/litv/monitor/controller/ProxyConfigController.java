@@ -31,20 +31,20 @@ public class ProxyConfigController {
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     @GetMapping("/list")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<List<ProxyConfig>> list() {
         return Result.success(proxyConfigService.listAll());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<ProxyConfig> getById(@PathVariable Long id) {
         ProxyConfig config = proxyConfigService.getById(id);
         return config != null ? Result.success(config) : Result.error(404, "代理配置不存在");
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<ProxyConfig> create(@Valid @RequestBody ProxyConfig config) {
         ProxyConfig created = proxyConfigService.create(config);
         auditLog();
@@ -52,7 +52,7 @@ public class ProxyConfigController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<ProxyConfig> update(@PathVariable Long id, @Valid @RequestBody ProxyConfig config) {
         ProxyConfig updated = proxyConfigService.update(id, config);
         if (updated == null) return Result.error(404, "代理配置不存在");
@@ -61,7 +61,7 @@ public class ProxyConfigController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<Void> delete(@PathVariable Long id) {
         proxyConfigService.delete(id);
         auditLog();
@@ -69,7 +69,7 @@ public class ProxyConfigController {
     }
 
     @PutMapping("/{id}/activate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<ProxyConfig> activate(@PathVariable Long id) {
         ProxyConfig config = proxyConfigService.setActive(id);
         auditLog();
@@ -77,7 +77,7 @@ public class ProxyConfigController {
     }
 
     @PutMapping("/deactivate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<Void> deactivateAll() {
         proxyConfigService.deactivateAll();
         auditLog();
@@ -85,7 +85,7 @@ public class ProxyConfigController {
     }
 
     @PostMapping("/{id}/test")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<String> test(@PathVariable Long id) {
         ProxyConfig config = proxyConfigService.getById(id);
         if (config == null) return Result.error(404, "代理配置不存在");

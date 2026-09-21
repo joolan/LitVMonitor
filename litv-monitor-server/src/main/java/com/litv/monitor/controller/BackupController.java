@@ -71,7 +71,7 @@ public class BackupController {
     }
 
     @PostMapping("/create")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<Map<String, String>> createBackup() {
         try {
             String dbPath = extractDbPath();
@@ -110,7 +110,7 @@ public class BackupController {
     }
 
     @GetMapping("/list")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<List<Map<String, Object>>> listBackups() {
         try {
             String dbPath = extractDbPath();
@@ -139,7 +139,7 @@ public class BackupController {
     }
 
     @PostMapping("/restore")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<Void> restoreBackup(@RequestBody Map<String, String> body) {
         try {
             String backupPath = body.get("path");
@@ -234,7 +234,7 @@ public class BackupController {
     }
 
     @PostMapping("/upload-restore")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<Void> uploadAndRestore(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
         try {
             if (file.isEmpty()) {
@@ -298,7 +298,7 @@ public class BackupController {
     }
 
     @PostMapping("/cleanup")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<Map<String, Integer>> cleanupData(@RequestBody Map<String, Object> body) {
         int executionDays = getIntParam(body, "executionDays", 30);
         int alertDays = getIntParam(body, "alertDays", 30);

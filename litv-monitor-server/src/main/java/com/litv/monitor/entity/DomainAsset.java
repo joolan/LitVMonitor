@@ -35,6 +35,8 @@ public class DomainAsset {
 
     private Boolean sslAlertOnExecute;
 
+    private Boolean starred;
+
     @TableField(exist = false)
     private Integer sslRemainingDays;
 

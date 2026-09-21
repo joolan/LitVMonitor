@@ -107,8 +107,23 @@
         </el-form-item>
 
         <!-- Time windows -->
-        <el-form-item label="静默时段">
-          <div v-for="(w, i) in form.timeWindows" :key="i" class="time-window-row">
+        <el-form-item>
+          <template #label>
+            <span style="display: inline-flex; align-items: center;">
+              <span>静默时段</span>
+              <el-tooltip placement="right" :width="360">
+                <template #content>
+                  <div style="line-height: 1.8">
+                    <p><b>一次性静默</b>：指定起止日期，期间每天的静默时段都生效。如 9:00~18:00 表示生效日期内每天 9:00-18:00 静默。</p>
+                    <p><b>周期性静默</b>：按每日/每周/每月重复，匹配日期 + 时段。如"每周一 10:00~08:00"表示仅在每周一 10:00 到周二 08:00 之间静默。</p>
+                    <p style="color: #e6a23c">注意：跨夜时段（开始 > 结束）在周期性规则中仅对匹配日期生效。如"每周一 10:00~08:00"，周二 0:00-8:00 不会静默（因为周二不是周一）。</p>
+                  </div>
+                </template>
+                <el-icon style="margin-left: 2px; cursor: pointer; color: #909399;"><QuestionFilled /></el-icon>
+              </el-tooltip>
+            </span>
+          </template>
+          <div v-for="(w, i) in form.timeWindows" :key="i" class="time-window-row" :style="{ marginTop: i > 0 ? '8px' : '0' }">
             <el-time-picker v-model="w.start" format="HH:mm" value-format="HH:mm" placeholder="开始" style="width: 120px" />
             <span style="margin: 0 4px">~</span>
             <el-time-picker v-model="w.end" format="HH:mm" value-format="HH:mm" placeholder="结束" style="width: 120px" />
@@ -116,7 +131,7 @@
               <el-icon><Delete /></el-icon>
             </el-button>
           </div>
-          <el-button type="primary" link @click="addTimeWindow">
+          <el-button type="primary" link @click="addTimeWindow" style="margin-top: 8px">
             <el-icon><Plus /></el-icon> 添加时段
           </el-button>
         </el-form-item>
@@ -146,6 +161,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { QuestionFilled } from '@element-plus/icons-vue'
 import { alertSilenceApi } from '@/api'
 import { formatTime } from '@/utils/format'
 import { SILENCE_TYPE, RECURRENCE_TYPE, APPLY_TO } from '@/constants/enums'

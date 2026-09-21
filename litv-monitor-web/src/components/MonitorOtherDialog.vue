@@ -61,7 +61,12 @@
       </el-form-item>
       <el-form-item label="告警通道" v-if="form.alertEnabled">
         <el-select v-model="form.alertConfigIds" multiple placeholder="选择告警通道" style="width:100%">
-          <el-option v-for="ch in alertConfigs" :key="ch.id" :label="ch.name" :value="String(ch.id)" />
+          <el-option v-for="ch in alertConfigs" :key="ch.id" :label="ch.name" :value="String(ch.id)">
+            <span>{{ ch.name }}</span>
+            <el-tag :type="ch.enabled ? 'success' : 'info'" size="small" style="margin-left: 8px; float: right">
+              {{ ch.enabled ? '启用' : '禁用' }}
+            </el-tag>
+          </el-option>
         </el-select>
       </el-form-item>
     </el-form>

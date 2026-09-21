@@ -53,6 +53,11 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public Result<SysUser> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO dto) {
         try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            SysUser targetUser = userService.findById(id);
+            if (targetUser != null && "admin".equals(targetUser.getUsername()) && !"admin".equals(auth.getName())) {
+                return Result.error(400, "admin用户只能由本人修改");
+            }
             SysUser user = userService.updateUser(id, dto);
             if (user != null) {
                 String username = getCurrentUsername();
@@ -77,6 +82,10 @@ public class UserController {
         SysUser currentUser = userService.findByUsername(auth.getName());
         if (currentUser != null && currentUser.getId().equals(id)) {
             return Result.error(400, "不能删除自己的账户");
+        }
+        SysUser targetUser = userService.findById(id);
+        if (targetUser != null && "admin".equals(targetUser.getUsername()) && !"admin".equals(auth.getName())) {
+            return Result.error(400, "admin用户只能由本人修改");
         }
         if (userService.isAdmin(id) && userService.countAdmins() <= 1) {
             return Result.error(400, "不能删除最后一个管理员账户");

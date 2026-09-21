@@ -34,6 +34,9 @@
           <el-button type="primary" @click="loadDomains">搜索</el-button>
           <el-button @click="resetSearch">重置</el-button>
         </el-form-item>
+        <el-form-item v-if="canEditDomain">
+          <el-checkbox v-model="searchForm.starredOnly" @change="loadDomains">只看关注</el-checkbox>
+        </el-form-item>
       </el-form>
     </el-card>
 
@@ -91,6 +94,16 @@
         </el-table-column>
         <el-table-column prop="lastSeenAt" label="最后发现" width="180">
           <template #default="{ row }">{{ formatTime(row.lastSeenAt) }}</template>
+        </el-table-column>
+        <el-table-column label="关注" width="60" v-if="canEditDomain">
+          <template #default="{ row }">
+            <el-button type="warning" link @click="toggleStar(row)">
+              <el-icon :size="18">
+                <StarFilled v-if="row.starred" />
+                <Star v-else />
+              </el-icon>
+            </el-button>
+          </template>
         </el-table-column>
         <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
@@ -194,14 +207,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Star, StarFilled } from '@element-plus/icons-vue'
 import { domainApi, alertChannelApi } from '@/api'
 import { formatTime } from '@/utils/format'
 import { SSL_STATUS } from '@/constants/enums'
+import { usePermission } from '@/composables/usePermission'
 
 const route = useRoute()
+const { hasButton } = usePermission()
+const canEditDomain = computed(() => hasButton('domain:edit'))
 
 const loading = ref(false)
 const saving = ref(false)
@@ -214,7 +231,7 @@ const alertConfigs = ref([])
 const currentDomain = ref(null)
 const ipHistoryList = ref([])
 
-const searchForm = reactive({ keyword: '', sslStatus: null, maxRemainingDays: null })
+const searchForm = reactive({ keyword: '', sslStatus: null, maxRemainingDays: null, starredOnly: false })
 
 const sslAlertForm = reactive({
   sslAlertEnabled: false,
@@ -233,7 +250,9 @@ onMounted(async () => {
     searchForm.maxRemainingDays = Number(q.maxRemainingDays)
   }
   await loadDomains()
-  await loadAlertConfigs()
+  if (hasButton('alert-template:edit')) {
+    await loadAlertConfigs()
+  }
 })
 
 const loadDomains = async () => {
@@ -242,7 +261,8 @@ const loadDomains = async () => {
     const res = await domainApi.list({
       keyword: searchForm.keyword,
       sslStatus: searchForm.sslStatus,
-      maxRemainingDays: searchForm.maxRemainingDays
+      maxRemainingDays: searchForm.maxRemainingDays,
+      starred: searchForm.starredOnly ? true : undefined
     })
     domains.value = res.data || []
   } catch (error) {
@@ -265,7 +285,17 @@ const resetSearch = () => {
   searchForm.keyword = ''
   searchForm.sslStatus = null
   searchForm.maxRemainingDays = null
+  searchForm.starredOnly = false
   loadDomains()
+}
+
+const toggleStar = async (row) => {
+  try {
+    const res = await domainApi.toggleStar(row.id)
+    row.starred = res.data.starred
+  } catch (error) {
+    ElMessage.error('操作失败')
+  }
 }
 
 const deleteDomain = async (id) => {

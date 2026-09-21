@@ -138,6 +138,13 @@ public class UserSessionService {
         removeSession(jti);
     }
 
+    public UserSession findSessionByJti(String jti) {
+        if (jti == null) return null;
+        return userSessionMapper.selectOne(
+            new LambdaQueryWrapper<UserSession>().eq(UserSession::getJti, jti)
+        );
+    }
+
     // --- Login attempt tracking ---
 
     public void recordFailedAttempt(String username) {

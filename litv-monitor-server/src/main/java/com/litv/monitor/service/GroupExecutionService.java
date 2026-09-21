@@ -138,7 +138,6 @@ public class GroupExecutionService {
             }
 
             if (Boolean.TRUE.equals(group.getAlertOnFail())) {
-                // Count actual failures
                 int failCount = 0;
                 for (ExecutionLog r : results) {
                     if ("FAIL".equals(r.getStatus()) || "ERROR".equals(r.getStatus())) {
@@ -147,7 +146,6 @@ public class GroupExecutionService {
                 }
                 int totalExecuted = results.size();
 
-                // Determine if group is considered failed based on criteria
                 boolean groupFailed = false;
                 String criteriaType = group.getFailCriteriaType() != null ? group.getFailCriteriaType() : "ANY";
                 switch (criteriaType) {
@@ -180,7 +178,20 @@ public class GroupExecutionService {
                         alertService.sendGroupAlert(groupId, group.getName(), consecutive, group.getAlertConfigIds(), executionId);
                     }
                 } else {
+                    // 任务成功：每次成功都通知 AlertService，让它自行判断是否达到恢复条件
+                    Integer prevFailCount = consecutiveFailCounts.getIfPresent(groupId);
                     consecutiveFailCounts.invalidate(groupId);
+                    ExecutionLog successLog = new ExecutionLog();
+                    successLog.setGroupId(groupId);
+                    successLog.setMonitorName(group.getName());
+                    successLog.setExecutionId(executionId);
+                    successLog.setStatus("SUCCESS");
+                    successLog.setExecutedAt(java.time.LocalDateTime.now());
+                    if (prevFailCount != null && prevFailCount > 0) {
+                        log.info("Group {} recovered after {} consecutive failures", group.getName(), prevFailCount);
+                        successLog.setErrorMessage(String.format("任务 [%s] 已从连续失败中恢复", group.getName()));
+                    }
+                    alertService.sendAlertByIds(group.getAlertConfigIds(), successLog, "GROUP_FAIL");
                 }
             }
 

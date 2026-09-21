@@ -3,6 +3,7 @@ package com.litv.monitor.controller;
 import com.litv.monitor.dto.Result;
 import com.litv.monitor.entity.DomainAsset;
 import com.litv.monitor.entity.SslCertificate;
+import com.litv.monitor.mapper.DomainAssetMapper;
 import com.litv.monitor.service.DomainAssetService;
 import com.litv.monitor.service.SslService;
 import com.litv.monitor.service.AuditLogService;
@@ -21,6 +22,7 @@ import java.util.List;
 public class DomainAssetController {
 
     private final DomainAssetService domainAssetService;
+    private final DomainAssetMapper domainAssetMapper;
     private final SslService sslService;
     private final AuditLogService auditLogService;
     private final ObjectMapper objectMapper;
@@ -29,8 +31,9 @@ public class DomainAssetController {
     public Result<List<DomainAsset>> listDomains(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String sslStatus,
-            @RequestParam(required = false) Integer maxRemainingDays) {
-        return Result.success(domainAssetService.listDomainAssets(keyword, sslStatus, maxRemainingDays));
+            @RequestParam(required = false) Integer maxRemainingDays,
+            @RequestParam(required = false) Boolean starred) {
+        return Result.success(domainAssetService.listDomainAssets(keyword, sslStatus, maxRemainingDays, starred));
     }
 
     @GetMapping("/{id}")
@@ -84,6 +87,16 @@ public class DomainAssetController {
     @GetMapping("/ssl/expiring")
     public Result<List<SslCertificate>> getExpiringCertificates() {
         return Result.success(sslService.getExpiringCertificates());
+    }
+
+    @PutMapping("/{id}/star")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
+    public Result<DomainAsset> toggleStar(@PathVariable Long id) {
+        DomainAsset domain = domainAssetMapper.selectById(id);
+        if (domain == null) return Result.error(404, "域名不存在");
+        domain.setStarred(domain.getStarred() != null && domain.getStarred() ? false : true);
+        domainAssetMapper.updateById(domain);
+        return Result.success(domain);
     }
 
     private String getCurrentUsername() {

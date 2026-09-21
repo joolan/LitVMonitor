@@ -102,7 +102,9 @@ export const monitorApi = {
   updateInGroup: (id, groupId, data) => api.put(`/monitor/${id}/groups/${groupId}`, data),
   removeFromGroup: (id, groupId) => api.delete(`/monitor/${id}/groups/${groupId}`),
   batchUpdateStatus: (ids, enabled) => api.put('/monitor/batch/status', { ids, enabled }),
-  copy: (id) => api.post(`/monitor/${id}/copy`)
+  copy: (id) => api.post(`/monitor/${id}/copy`),
+  export: () => api.get('/monitor/export', { responseType: 'blob' }),
+  import: (formData) => api.post('/monitor/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
 }
 
 // Group API
@@ -137,7 +139,8 @@ export const domainApi = {
   delete: (id) => api.delete(`/domain/${id}`),
   getSsl: (id) => api.get(`/domain/${id}/ssl`),
   getExpiringSsl: () => api.get('/domain/ssl/expiring'),
-  getIpHistory: (id) => api.get(`/domain/${id}/ip-history`)
+  getIpHistory: (id) => api.get(`/domain/${id}/ip-history`),
+  toggleStar: (id) => api.put(`/domain/${id}/star`)
 }
 
 // Alert API

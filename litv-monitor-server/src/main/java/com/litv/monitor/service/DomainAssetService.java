@@ -88,13 +88,17 @@ public class DomainAssetService {
                 .collect(Collectors.toList());
     }
 
-    public List<DomainAsset> listDomainAssets(String keyword, String sslStatus, Integer maxRemainingDays) {
+    public List<DomainAsset> listDomainAssets(String keyword, String sslStatus, Integer maxRemainingDays, Boolean starred) {
         LambdaQueryWrapper<DomainAsset> wrapper = new LambdaQueryWrapper<>();
         if (keyword != null && !keyword.isEmpty()) {
             wrapper.like(DomainAsset::getDomain, keyword)
                     .or()
                     .like(DomainAsset::getIpAddress, keyword);
         }
+        if (starred != null && starred) {
+            wrapper.eq(DomainAsset::getStarred, true);
+        }
+        wrapper.orderByDesc(DomainAsset::getStarred);
         wrapper.orderByDesc(DomainAsset::getLastSeenAt);
         List<DomainAsset> domains = domainAssetMapper.selectList(wrapper);
 

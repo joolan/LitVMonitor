@@ -26,7 +26,7 @@
         <el-button type="danger" size="small" @click="vulnVisible = true">
           <el-icon><Warning /></el-icon> 漏洞情报
         </el-button>
-        <el-button type="warning" size="small" @click="$router.push('/reminder')">
+        <el-button type="warning" size="small" @click="$router.push('/reminder')" v-if="canViewReminder">
           <el-icon><AlarmClock /></el-icon> 周期提醒
           <el-badge v-if="reminderBadgeCount > 0" :value="reminderBadgeCount"
             type="danger" class="reminder-badge" />
@@ -348,8 +348,11 @@ echarts.use([BarChart, PieChart, LineChart, GridComponent, TooltipComponent, Leg
 import { dashboardApi, logApi, memoApi, reminderApi } from '@/api'
 import { ElMessage } from 'element-plus'
 import { formatTime } from '@/utils/format'
+import { usePermission } from '@/composables/usePermission'
 
 const router = useRouter()
+const { hasButton } = usePermission()
+const canViewReminder = computed(() => hasButton('reminder:create'))
 
 const overview = ref({})
 const recentLogs = ref([])

@@ -189,6 +189,7 @@ CREATE TABLE IF NOT EXISTS domain_asset (
     ssl_alert_days_before INTEGER DEFAULT 30,
     ssl_alert_one_day_before INTEGER DEFAULT 1,
     ssl_alert_on_execute INTEGER DEFAULT 0,
+    starred INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT (datetime('now','localtime')),
     UNIQUE(domain, port)
 );

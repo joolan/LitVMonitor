@@ -4,7 +4,58 @@
 
 ---
 
-## 2026-09-20（Bug 修复与数据清理）
+## 2026-09-21（v1.3.2 功能增强与角色权限完善）
+
+### 监控项导入导出
+- `MonitorImportExportController.java`：新增 `GET /monitor/export`（Apache POI 直接构建 XSSFWorkbook）和 `POST /monitor/import`（支持告警通道替换策略）
+- `pom.xml`：新增 `poi-ooxml 5.2.5` 依赖
+- `api/index.js`：新增 `monitorApi.export()` 和 `monitorApi.import(formData)`
+- `MonitorList.vue`：新增导入/导出按钮 + 导入弹窗（渠道替换选项）
+
+### 域名证书星标关注
+- `DomainAsset.java`：新增 `starred` 字段
+- `DatabaseInitConfig.java`：Migration 57 添加 `starred INTEGER DEFAULT 0` 列
+- `DomainAssetController.java`：新增 `PUT /{id}/star` 切换接口，列表支持 `starred=true` 过滤
+- `DomainList.vue`：星标列（v-if 控制 VIEWER 不可见）+ "只看关注"复选框
+
+### 告警静默优化
+- `AlertSilenceService.isInTimeWindow()`：重写判断逻辑——无日期+有时间段仅在时段内静默；无日期+无时间段永久静默；weekly/monthly 从 config 顶层读取 days/dates（修复之前从 window 对象查找导致过滤失效）
+- `DatabaseInitConfig.java`：Migration 58 重建 alert_silence 表，start_time/end_time 改为可空
+- `AlertSilenceList.vue`：静默时段标签增加 ? 图标悬浮说明（inline-flex 垂直居中对齐）
+
+### 监控任务告警恢复
+- `GroupExecutionService.java`：任务成功时每次都调用 `sendAlertByIds`，让 AlertService 自行判断恢复条件（之前只在第一次成功时调用一次，无法满足连续成功次数要求）
+- `AlertService.sendAlertByIds()`：静默分支增加 `incrementCount(fingerprint, false)`，确保失败计数被记录（之前静默直接 return 导致 current_count=0，恢复检测认为从未失败）
+
+### 角色权限
+- `ReminderController.java`：写操作增加 `@PreAuthorize`（create/update: ADMIN+OPERATOR, delete: ADMIN only）
+- `UserController.java`：编辑/删除 admin 用户时非 admin 本人返回错误
+- `SecuritySettingsController.java`：踢出会话不允许踢出 admin 用户
+- `ProxyConfigController.java`：全部接口改为 `hasAnyRole('ADMIN', 'OPERATOR')`
+- `BackupController.java`：列表/创建/恢复/上传恢复/数据清理放开给 OPERATOR；下载/删除保持 ADMIN only
+- `permissions.js`：reminder 菜单改为 ADMIN+OPERATOR；proxy/backup 菜单和按钮改为 ADMIN+OPERATOR；backup:download/backup:delete 保持 ADMIN only
+
+### VIEWER 角色修复
+- `AlertLogList.vue`：VIEWER 不调用 `loadAlertConfigs()`，隐藏告警渠道筛选下拉
+- `DomainList.vue`：VIEWER 隐藏关注列和"只看关注"复选框
+- `Dashboard.vue`：VIEWER 隐藏周期提醒按钮
+- `GroupList.vue`：VIEWER 不调用 `loadAllAlertConfigs()`
+- `permissions.js`：reminder 菜单改为 `['ADMIN', 'OPERATOR']`
+
+### 监控任务编辑修复
+- `GroupList.vue`：showDialog 创建时 `delete form.id`；submitForm 成功后重置 editingId 并清除 form.id
+
+### 非HTTP监控项
+- `MonitorOtherDialog.vue`：告警通道下拉选项增加启用/禁用状态标签
+
+### 导入Excel修复
+- `MonitorList.vue`：导入弹窗打开时先调用 `loadAlertConfigs()` 加载渠道列表
+
+### 版本/文档
+- 版本号升级至 1.3.2
+- 更新 changelog.md、README.md、operation.md
+
+---
 
 ### v1.3.1
 

@@ -8,6 +8,7 @@ import com.litv.monitor.entity.ReminderTask;
 import com.litv.monitor.service.ReminderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +41,7 @@ public class ReminderController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<ReminderTask> create(@RequestBody @Valid ReminderTaskDTO dto) {
         String username = getCurrentUsername();
         ReminderTask task = reminderService.create(dto, username);
@@ -47,6 +49,7 @@ public class ReminderController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<ReminderTask> update(@PathVariable Long id, @RequestBody ReminderTaskDTO dto) {
         ReminderTask task = reminderService.update(id, dto, getCurrentUsername());
         if (task == null) return Result.error("任务不存在");
@@ -54,6 +57,7 @@ public class ReminderController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public Result<Void> delete(@PathVariable Long id) {
         boolean ok = reminderService.delete(id, getCurrentUsername());
         if (!ok) return Result.error("任务不存在");
@@ -61,6 +65,7 @@ public class ReminderController {
     }
 
     @PutMapping("/{id}/complete")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<ReminderTask> complete(@PathVariable Long id) {
         ReminderTask task = reminderService.complete(id, getCurrentUsername());
         if (task == null) return Result.error("任务不存在");
@@ -68,6 +73,7 @@ public class ReminderController {
     }
 
     @PutMapping("/{id}/snooze")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<ReminderTask> snooze(@PathVariable Long id, @RequestBody ReminderSnoozeRequest req) {
         ReminderTask task = reminderService.snooze(id, req.getMinutes(), getCurrentUsername());
         if (task == null) return Result.error("任务不存在");
@@ -75,6 +81,7 @@ public class ReminderController {
     }
 
     @PutMapping("/{id}/enable")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<ReminderTask> enable(@PathVariable Long id) {
         ReminderTask task = reminderService.toggleEnabled(id, true, getCurrentUsername());
         if (task == null) return Result.error("任务不存在");
@@ -82,6 +89,7 @@ public class ReminderController {
     }
 
     @PutMapping("/{id}/disable")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public Result<ReminderTask> disable(@PathVariable Long id) {
         ReminderTask task = reminderService.toggleEnabled(id, false, getCurrentUsername());
         if (task == null) return Result.error("任务不存在");

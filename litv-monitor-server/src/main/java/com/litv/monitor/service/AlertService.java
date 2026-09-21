@@ -154,9 +154,10 @@ public class AlertService {
             return;
         }
 
-        // 2. 静默检查：不发送 + 不计入限频计数
+        // 2. 静默检查：不发送通知，但仍记录失败计数（恢复检测需要）
         if (alertSilenceService.isSilenced(monitorId, groupId)) {
             log.info("Alert silenced for monitor {} group {} ({})", monitorId, groupId, triggerType);
+            alertRateLimitService.incrementCount(fingerprint, false);
             recordAlertLog(null, null, "NONE", executionLog, "告警已静默", AlertSendStatus.SILENCED.name(), triggerType);
             return;
         }

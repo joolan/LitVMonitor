@@ -128,7 +128,7 @@ public class DatabaseInitConfig {
         try { jdbcTemplate.execute("ALTER TABLE monitor_group ADD COLUMN running INTEGER DEFAULT 0"); } catch (Exception e) { log.debug("Migration 11 skipped: {}", e.getMessage()); }
 
         // Migration 12: 创建告警静默表
-        try { jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS alert_silence (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(100) NOT NULL, description TEXT, silence_type VARCHAR(20) NOT NULL DEFAULT 'ONE_TIME', start_time TIMESTAMP NOT NULL, end_time TIMESTAMP, cron_expression VARCHAR(50), apply_to VARCHAR(20) NOT NULL DEFAULT 'ALL', apply_ids TEXT, enabled INTEGER DEFAULT 1, created_by INTEGER, created_at TIMESTAMP DEFAULT (datetime('now','localtime')), updated_at TIMESTAMP DEFAULT (datetime('now','localtime')))"); } catch (Exception e) { log.debug("Migration 12 skipped: {}", e.getMessage()); }
+        try { jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS alert_silence (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(100) NOT NULL, description TEXT, silence_type VARCHAR(20) NOT NULL DEFAULT 'ONE_TIME', start_time TIMESTAMP, end_time TIMESTAMP, cron_expression VARCHAR(50), apply_to VARCHAR(20) NOT NULL DEFAULT 'ALL', apply_ids TEXT, enabled INTEGER DEFAULT 1, created_by INTEGER, created_at TIMESTAMP DEFAULT (datetime('now','localtime')), updated_at TIMESTAMP DEFAULT (datetime('now','localtime')))"); } catch (Exception e) { log.debug("Migration 12 skipped: {}", e.getMessage()); }
 
         // Migration 13: 创建审计日志表
         try { jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, username VARCHAR(50), action VARCHAR(50) NOT NULL, target_type VARCHAR(50), target_id VARCHAR(50), target_name VARCHAR(200), detail TEXT, ip_address VARCHAR(50), created_at TIMESTAMP DEFAULT (datetime('now','localtime')))"); } catch (Exception e) { log.debug("Migration 13 skipped: {}", e.getMessage()); }
@@ -527,6 +527,17 @@ public class DatabaseInitConfig {
         try { jdbcTemplate.execute("ALTER TABLE alert_template ADD COLUMN template_type VARCHAR(10) DEFAULT 'CUSTOM'"); } catch (Exception e) {}
         // 将初始6个系统模板标记为SYSTEM
         try { jdbcTemplate.execute("UPDATE alert_template SET template_type = 'SYSTEM' WHERE id IN (1,2,3,4,5,6) AND (template_type IS NULL OR template_type = 'CUSTOM')"); } catch (Exception e) {}
+
+        // Migration 57: domain_asset 新增 starred 字段
+        try { jdbcTemplate.execute("ALTER TABLE domain_asset ADD COLUMN starred INTEGER DEFAULT 0"); } catch (Exception e) {}
+
+        // Migration 58: alert_silence start_time/end_time 改为可空（支持永久静默）
+        try {
+            jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS alert_silence_new (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(100) NOT NULL, description TEXT, silence_type VARCHAR(20) NOT NULL DEFAULT 'ONE_TIME', start_time TIMESTAMP, end_time TIMESTAMP, cron_expression VARCHAR(50), schedule_config TEXT, apply_to VARCHAR(20) NOT NULL DEFAULT 'ALL', apply_ids TEXT, enabled INTEGER DEFAULT 1, created_by INTEGER, created_at TIMESTAMP DEFAULT (datetime('now','localtime')), updated_at TIMESTAMP DEFAULT (datetime('now','localtime')))");
+            jdbcTemplate.execute("INSERT OR IGNORE INTO alert_silence_new SELECT id, name, description, silence_type, start_time, end_time, cron_expression, schedule_config, apply_to, apply_ids, enabled, created_by, created_at, updated_at FROM alert_silence");
+            jdbcTemplate.execute("DROP TABLE IF EXISTS alert_silence");
+            jdbcTemplate.execute("ALTER TABLE alert_silence_new RENAME TO alert_silence");
+        } catch (Exception e) { log.debug("Migration 58 skipped: {}", e.getMessage()); }
 
         return null;
     }

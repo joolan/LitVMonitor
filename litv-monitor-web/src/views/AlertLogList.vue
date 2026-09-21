@@ -17,7 +17,7 @@
             <el-option label="测试" value="TEST" />
           </el-select>
         </el-form-item>
-        <el-form-item label="告警渠道">
+        <el-form-item label="告警渠道" v-if="canManageAlerts">
           <el-select v-model="filters.alertConfigId" clearable placeholder="全部" style="width: 160px">
             <el-option v-for="c in alertConfigs" :key="c.id" :label="c.name" :value="c.id" />
           </el-select>
@@ -178,14 +178,17 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { alertApi } from '@/api'
+import { usePermission } from '@/composables/usePermission'
 import { formatTime } from '@/utils/format'
 import { TRIGGER_TYPES, ALERT_STATUS, CHANNEL_TYPES } from '@/constants/enums'
 
 const route = useRoute()
+const { hasButton } = usePermission()
+const canManageAlerts = computed(() => hasButton('alert-template:edit'))
 
 const loading = ref(false)
 const logs = ref([])
@@ -216,6 +219,7 @@ onMounted(() => {
 })
 
 const loadAlertConfigs = async () => {
+  if (!canManageAlerts.value) return
   try {
     const res = await alertApi.listConfigs()
     alertConfigs.value = res.data || []

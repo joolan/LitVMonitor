@@ -36,14 +36,14 @@ export const MENUS = [
   { key: 'alert-log', path: '/alert-log', title: '告警记录', icon: 'Bell', roles: [], group: 'alert-group' },
   { key: 'alert-silence', path: '/alert-silence', title: '告警静默', icon: 'Bell', roles: ['ADMIN', 'OPERATOR'], group: 'alert-group' },
   { key: 'inspection', path: '/inspection', title: '巡检模式', icon: 'Monitor', roles: ['ADMIN', 'OPERATOR'], group: 'alert-group' },
-  { key: 'reminder', path: '/reminder', title: '周期提醒', icon: 'AlarmClock', roles: [] },
+  { key: 'reminder', path: '/reminder', title: '周期提醒', icon: 'AlarmClock', roles: ['ADMIN', 'OPERATOR'] },
   // 系统管理子菜单
   { key: 'variable', path: '/variable', title: '变量管理', icon: 'Setting', roles: ['ADMIN', 'OPERATOR'], group: 'system-group' },
-  { key: 'proxy', path: '/proxy', title: '代理设置', icon: 'Connection', roles: ['ADMIN'], group: 'system-group' },
+  { key: 'proxy', path: '/proxy', title: '代理设置', icon: 'Connection', roles: ['ADMIN', 'OPERATOR'], group: 'system-group' },
   { key: 'api-schema', path: '/api-schema', title: 'API Schema', icon: 'Document', roles: ['ADMIN', 'OPERATOR'], group: 'system-group' },
   { key: 'user', path: '/user', title: '用户管理', icon: 'User', roles: ['ADMIN'], group: 'system-group' },
   { key: 'security-settings', path: '/security-settings', title: '安全设置', icon: 'Lock', roles: ['ADMIN'], group: 'system-group' },
-  { key: 'backup', path: '/backup', title: '数据备份', icon: 'Download', roles: ['ADMIN'], group: 'system-group' },
+  { key: 'backup', path: '/backup', title: '数据备份', icon: 'Download', roles: ['ADMIN', 'OPERATOR'], group: 'system-group' },
   { key: 'audit-log', path: '/audit-log', title: '审计日志', icon: 'Document', roles: ['ADMIN', 'OPERATOR'], group: 'system-group' },
   // 使用手册
   { key: 'manual', path: '/manual', title: '使用手册', icon: 'Reading', roles: [] }
@@ -116,17 +116,17 @@ export const BUTTONS = {
   'security:unlock': { roles: ['ADMIN'] },
 
   // 数据备份
-  'backup:create': { roles: ['ADMIN'] },
+  'backup:create': { roles: ['ADMIN', 'OPERATOR'] },
   'backup:download': { roles: ['ADMIN'] },
-  'backup:restore': { roles: ['ADMIN'] },
+  'backup:restore': { roles: ['ADMIN', 'OPERATOR'] },
   'backup:delete': { roles: ['ADMIN'] },
 
   // 代理设置
-  'proxy:create': { roles: ['ADMIN'] },
-  'proxy:edit': { roles: ['ADMIN'] },
-  'proxy:delete': { roles: ['ADMIN'] },
-  'proxy:activate': { roles: ['ADMIN'] },
-  'proxy:test': { roles: ['ADMIN'] },
+  'proxy:create': { roles: ['ADMIN', 'OPERATOR'] },
+  'proxy:edit': { roles: ['ADMIN', 'OPERATOR'] },
+  'proxy:delete': { roles: ['ADMIN', 'OPERATOR'] },
+  'proxy:activate': { roles: ['ADMIN', 'OPERATOR'] },
+  'proxy:test': { roles: ['ADMIN', 'OPERATOR'] },
 
   // API Schema
   'api-schema:create': { roles: ['ADMIN', 'OPERATOR'] },

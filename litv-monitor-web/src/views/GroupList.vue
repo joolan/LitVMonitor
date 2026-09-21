@@ -252,8 +252,10 @@ import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { groupApi, monitorApi, alertChannelApi } from '@/api'
 import { formatTime } from '@/utils/format'
+import { usePermission } from '@/composables/usePermission'
 
 const route = useRoute()
+const { hasButton } = usePermission()
 
 const loading = ref(false)
 const submitting = ref(false)
@@ -352,6 +354,7 @@ const loadAllMonitors = async () => {
 }
 
 const loadAllAlertConfigs = async () => {
+  if (!hasButton('alert-template:edit')) return
   try {
     const res = await alertChannelApi.list()
     allAlertConfigs.value = res.data || []
@@ -436,6 +439,7 @@ const showDialog = async (row) => {
   failPercentThreshold: 50,
   alertConfigIds: '', monitors: []
     })
+    delete form.id
     scheduleType.value = 'interval'
     intervalMinutes.value = 5
     dailyTime.value = '00:00:00'
@@ -477,6 +481,8 @@ const submitForm = async () => {
       await groupApi.create(form)
       ElMessage.success('创建成功')
     }
+    editingId.value = null
+    delete form.id
     dialogVisible.value = false
     loadGroups()
   } catch (error) {

@@ -88,6 +88,10 @@ public class SecuritySettingsController {
         if (jti == null || jti.isEmpty()) {
             return Result.error(400, "缺少 jti 参数");
         }
+        var session = userSessionService.findSessionByJti(jti);
+        if (session != null && "admin".equals(session.getUsername())) {
+            return Result.error(400, "不能踢出admin用户");
+        }
         userSessionService.kickSession(jti);
         String username = getCurrentUsername();
         auditLogService.record(null, username, "KICK", "SESSION",

@@ -3,6 +3,14 @@
     <div class="page-header">
       <h2>监控项管理</h2>
       <div class="header-actions">
+        <el-button type="warning" @click="exportMonitors" v-permission="'monitor:create'">
+          <el-icon><Download /></el-icon>
+          导出Excel
+        </el-button>
+        <el-button type="info" @click="showImportDialog" v-permission="'monitor:create'">
+          <el-icon><Upload /></el-icon>
+          导入Excel
+        </el-button>
         <el-button type="primary" @click="showDialog()" v-permission="'monitor:create'">
           <el-icon><Plus /></el-icon>
           添加HTTP监控
@@ -200,6 +208,70 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <!-- 导入监控项弹窗 -->
+    <el-dialog v-model="importDialogVisible" title="导入监控项" width="560px" :close-on-click-modal="false">
+      <el-alert type="info" :closable="false" style="margin-bottom: 16px;">
+        <template #title>
+          <div style="line-height: 1.8;">
+            <b>导入规则：</b><br>
+            1. 仅支持 .xlsx / .xls 文件，从「导出Excel」下载的模板填写后导入<br>
+            2. 导入为<b>追加模式</b>，不会覆盖已有监控项<br>
+            3. <b>名称</b>和 <b>URL/地址</b>为必填项，缺少则校验失败整表回滚<br>
+            4. 告警渠道 ID 不存在时自动置空，不会导致导入失败<br>
+            5. 监控项中使用的变量（如 <code v-text="'{{global.xxx}}'"></code>）原样保留，后续手动配置即可<br>
+            6. 导入过程为<b>事务整体提交</b>，任意行校验失败则全部回滚
+          </div>
+        </template>
+      </el-alert>
+
+      <el-form label-width="140px">
+        <el-form-item label="选择文件">
+          <el-upload
+            ref="importUploadRef"
+            :auto-upload="false"
+            :limit="1"
+            accept=".xlsx,.xls"
+            :on-change="onImportFileChange"
+            :on-exceed="() => ElMessage.warning('只能选择一个文件')"
+          >
+            <el-button type="primary">选择 Excel 文件</el-button>
+            <template #tip>
+              <div style="color: #909399; font-size: 12px; margin-top: 4px;">支持 .xlsx / .xls 格式</div>
+            </template>
+          </el-upload>
+        </el-form-item>
+
+        <el-form-item label="告警渠道处理">
+          <el-radio-group v-model="importChannelMode">
+            <el-radio value="keep">保持 Excel 原值</el-radio>
+            <el-radio value="override">手动选择渠道替换</el-radio>
+          </el-radio-group>
+          <div style="color: #909399; font-size: 12px; margin-top: 4px;">
+            <span v-if="importChannelMode === 'keep'">Excel 中的告警渠道 ID 原样导入，不存在的 ID 自动置空</span>
+            <span v-else>所有导入项的告警渠道统一替换为下方选择的渠道</span>
+          </div>
+        </el-form-item>
+
+        <el-form-item v-if="importChannelMode === 'override'" label="选择告警渠道">
+          <el-select v-model="importChannelIds" multiple placeholder="选择告警渠道" style="width: 100%">
+            <el-option v-for="c in allAlertConfigs" :key="c.id" :label="c.name" :value="String(c.id)">
+              <span>{{ c.name }}</span>
+              <el-tag :type="c.enabled ? 'success' : 'info'" size="small" style="margin-left: 8px; float: right">
+                {{ c.enabled ? '启用' : '禁用' }}
+              </el-tag>
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="closeImportDialog">取消</el-button>
+        <el-button type="primary" @click="executeImport" :loading="importLoading" :disabled="!importFile">
+          确认导入
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -249,6 +321,71 @@ const batchMonitorList = ref([])
 
 const searchForm = reactive({ keyword: '', enabled: null, id: null })
 const pagination = reactive({ page: 1, size: 10, total: 0 })
+
+// Import/Export
+const importDialogVisible = ref(false)
+const importLoading = ref(false)
+const importFile = ref(null)
+const importChannelMode = ref('keep')
+const importChannelIds = ref([])
+const importUploadRef = ref(null)
+
+const exportMonitors = async () => {
+  try {
+    const blob = await monitorApi.export()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '监控项列表.xlsx'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  } catch (error) {
+    ElMessage.error('导出失败')
+  }
+}
+
+const onImportFileChange = (file) => {
+  importFile.value = file.raw
+}
+
+const closeImportDialog = () => {
+  importDialogVisible.value = false
+  importFile.value = null
+  importChannelMode.value = 'keep'
+  importChannelIds.value = []
+  if (importUploadRef.value) importUploadRef.value.clearFiles()
+}
+
+const executeImport = async () => {
+  if (!importFile.value) {
+    ElMessage.warning('请先选择文件')
+    return
+  }
+  importLoading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', importFile.value)
+    formData.append('alertChannelOverride', importChannelMode.value === 'override')
+    if (importChannelMode.value === 'override') {
+      formData.append('alertChannelIds', importChannelIds.value.join(','))
+    }
+    const res = await monitorApi.import(formData)
+    if (res.code === 200) {
+      ElMessage.success(`成功导入 ${res.data.count} 个监控项`)
+      closeImportDialog()
+      loadMonitors()
+    } else {
+      ElMessage.error(res.message || '导入失败')
+    }
+  } catch (error) {
+    ElMessage.error(error.message || '导入失败')
+  } finally {
+    importLoading.value = false
+  }
+}
 
 const loadAlertConfigs = async () => {
   try {
@@ -368,6 +505,11 @@ const showOtherDialog = async (row) => {
   await loadAlertConfigs()
   otherEditingRow.value = row || null
   otherDialogVisible.value = true
+}
+
+const showImportDialog = async () => {
+  await loadAlertConfigs()
+  importDialogVisible.value = true
 }
 
 const deleteMonitor = async (id) => {
